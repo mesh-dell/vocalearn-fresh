@@ -1,0 +1,104 @@
+"use client";
+
+import Link from "next/link";
+import { BookOpen, Menu } from "lucide-react";
+
+import { Button } from "@repo/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/ui/dropdown-menu";
+
+import { ThemeToggle } from "@/components/theme-toggle";
+import { useAuth } from "@/Context/useAuth";
+
+export function StaffNav() {
+  const { logout } = useAuth();
+
+  return (
+    <header className="border-b bg-background">
+      <div className="container mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
+              <BookOpen className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="text-xl font-semibold">
+              VocaLearn Staff
+            </span>
+          </Link>
+
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-6">
+            <NavLink href="/dashboard">Dashboard</NavLink>
+            <NavLink href="/dashboard/courses">Courses</NavLink>
+            <NavLink href="/dashboard/assignments">Assignments</NavLink>
+            <NavLink href="/dashboard/chat">Chat</NavLink>
+
+            <ThemeToggle />
+
+            <Button variant="outline" onClick={logout}>
+              Log out
+            </Button>
+          </nav>
+
+          {/* Mobile Nav */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard">Dashboard</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/courses">Courses</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/assignments">Assignments</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/chat">Chat</Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={logout}>
+                Log out
+              </DropdownMenuItem>
+
+              <DropdownMenuItem>
+                <ThemeToggle />
+                <span className="ml-2">Toggle theme</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ---------------------------------- */
+/* Reusable Nav Link                   */
+/* ---------------------------------- */
+function NavLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="text-sm text-muted-foreground hover:text-foreground transition"
+    >
+      {children}
+    </Link>
+  );
+}
