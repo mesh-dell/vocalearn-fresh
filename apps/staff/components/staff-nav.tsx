@@ -26,9 +26,7 @@ export function StaffNav() {
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
               <BookOpen className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-semibold">
-              VocaLearn Staff
-            </span>
+            <span className="text-xl font-semibold">VocaLearn Staff</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -37,6 +35,7 @@ export function StaffNav() {
             <NavLink href="/dashboard/courses">Courses</NavLink>
             <NavLink href="/dashboard/assignments">Assignments</NavLink>
             <NavLink href="/dashboard/chat">Chat</NavLink>
+            <NavLink href="/dashboard/notifications">Notifications</NavLink>
 
             <ThemeToggle />
 
@@ -66,10 +65,11 @@ export function StaffNav() {
               <DropdownMenuItem asChild>
                 <Link href="/dashboard/chat">Chat</Link>
               </DropdownMenuItem>
-
-              <DropdownMenuItem onClick={logout}>
-                Log out
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/notifications">Notifications</Link>
               </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
 
               <DropdownMenuItem>
                 <ThemeToggle />
