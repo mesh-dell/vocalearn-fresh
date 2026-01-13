@@ -85,7 +85,7 @@ export default function CourseDetailPage() {
                 {module.week}: {module.moduleName}
               </h3>
               <div
-                className="prose prose-sm sm:prose-base max-w-full wrap-break-word whitespace-pre-wrap text-muted-foreground [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:text-foreground"
+                className="prose text-foreground dark:prose-invert mt-4 max-w-none"
                 dangerouslySetInnerHTML={{ __html: module.content }}
               />
             </div>

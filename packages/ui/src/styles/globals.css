@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 /* Tell Tailwind what to scan */
 @source "../../../apps/**/*.{ts,tsx}";
