@@ -158,7 +158,7 @@ export default function DashboardPage() {
                   </div>
 
                   <Link
-                    href={`/dashboard/course/${course.courseOverview.id}`}
+                    href={`/dashboard/course/view/${course.courseOverview.id}`}
                     className="block"
                   >
                     <Button className="mt-6 w-full">View Course</Button>
