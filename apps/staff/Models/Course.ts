@@ -2,6 +2,7 @@ export type ModuleDto = {
   week: string;
   moduleName: string;
   content: string; // HTML content
+  moduleId: number;
 };
 
 export type CourseOverview = {
