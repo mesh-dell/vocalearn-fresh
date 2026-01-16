@@ -12,14 +12,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@repo/ui/tooltip";
 
 export default function ChatPage() {
   const { isLoggedIn, user } = useAuth();
-  const isAuthenticated = isLoggedIn();
 
   const [students, setStudents] = useState<Student[]>([]);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   /* ---------------- Fetch students ---------------- */
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isLoggedIn) return;
 
     const fetchStudents = async () => {
       const response = await StudentGetAPI();
@@ -29,7 +28,7 @@ export default function ChatPage() {
     };
 
     fetchStudents();
-  }, [isAuthenticated]);
+  }, [isLoggedIn]);
 
   /* ---------------- Fetch unread counts ---------------- */
   useEffect(() => {

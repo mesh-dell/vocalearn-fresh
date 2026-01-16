@@ -1,16 +1,15 @@
 import axios from "axios";
 import { handleError } from "@/Helpers/ErrorHandle";
-import { UserProfile, UserProfileToken } from "../Models/User";
+import { UserProfile, UserProfileToken } from "@/Models/User";
 
-const api = "http://localhost:8080/staff/";
+const API_BASE = "http://localhost:8080/staff";
 
 export const loginAPI = async (email: string, password: string) => {
   try {
-    const data = await axios.post<UserProfileToken>(api + "auth/authenticate", {
-      email: email,
-      password: password,
+    return await axios.post<UserProfileToken>(`${API_BASE}/auth/authenticate`, {
+      email,
+      password,
     });
-    return data;
   } catch (error) {
     handleError(error);
   }
@@ -22,12 +21,11 @@ export const registerAPI = async (
   confirmPassword: string
 ) => {
   try {
-    const data = await axios.post<UserProfileToken>(api + "auth/register", {
-      email: email,
-      confirmPassword: confirmPassword,
-      password: password,
+    return await axios.post<UserProfileToken>(`${API_BASE}/auth/register`, {
+      email,
+      password,
+      confirmPassword,
     });
-    return data;
   } catch (error) {
     handleError(error);
   }
@@ -35,8 +33,10 @@ export const registerAPI = async (
 
 export const profileAPI = async (token: string) => {
   try {
-    const res = await axios.get<UserProfile>(api + "get/profile", {
-      headers: { Authorization: `Bearer ${token}` },
+    const res = await axios.get<UserProfile>(`${API_BASE}/get/profile`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
     return res.data;
   } catch (error) {
