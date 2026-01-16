@@ -25,12 +25,18 @@ export default function AssignmentDetailPage() {
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<Record<number, string>>({});
 
-  useEffect(() => {
-    if (!user || !id) return;
+  const getClassFromAdmissionId = (admissionId: string) => {
+    const parts = admissionId.split("/");
+    return parts.length > 1 ? parts[1] : "";
+  };
 
+  useEffect(() => {
+    if (!user?.admissionId || !id) return;
+
+    const className = getClassFromAdmissionId(user.admissionId);
     const fetchAssignment = async () => {
       setLoading(true);
-      const res = await assignmentsGetAPI(user.className);
+      const res = await assignmentsGetAPI(className!);
       if (res) {
         const found = res.find((a) => a.assignmentId === Number(id));
         setAssignment(found || null);

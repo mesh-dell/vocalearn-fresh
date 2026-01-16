@@ -17,17 +17,16 @@ import { useRouter } from "next/navigation";
 export default function DashboardPage() {
   const { user, token, isLoggedIn } = useAuth();
   const router = useRouter();
-  const isAuthenticated = isLoggedIn();
 
   const [courses, setCourses] = useState<CourseGet[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoggedIn) {
       router.replace("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isLoggedIn, router]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -46,12 +45,12 @@ export default function DashboardPage() {
       }
     };
 
-    if (isAuthenticated) {
+    if (isLoggedIn && token) {
       fetchAllData();
     }
-  }, [isAuthenticated, token]);
+  }, [isLoggedIn, token]);
 
-  if (!isAuthenticated || !user) return null;
+  if (!isLoggedIn || !user) return null;
 
   if (loading) {
     return (

@@ -1,21 +1,22 @@
 "use client";
-import { createContext, useEffect, useState } from "react";
-import { UserProfile } from "@/Models/User";
+
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+
+import { UserProfile } from "@/Models/User";
 import {
   loginAPI,
   registerAPI,
   profileAPI,
   completeProfileAPI,
 } from "@/Services/AuthService";
-import { toast } from "react-toastify";
-import React from "react";
 import { awardPoints } from "@/Services/GamifyService";
 
 type UserContextType = {
   user: UserProfile | null;
   token: string | null;
-  loginUser: (email: string, password: string) => void;
+  loginUser: (email: string, password: string) => Promise<void>;
   registerUser: (
     email: string,
     admissionYear: string,
@@ -23,42 +24,85 @@ type UserContextType = {
     courseName: string,
     gender: string,
     password: string,
-    confirmPassword: string,
-  ) => void;
+    confirmPassword: string
+  ) => Promise<void>;
   logout: () => void;
-  completeUserProfile: (firstName: string, lastName: string) => void;
-  isLoggedIn: () => boolean;
+  completeUserProfile: (firstName: string, lastName: string) => Promise<void>;
+  isLoggedIn: boolean;
 };
 
-type Props = { children: React.ReactNode };
-
+type Props = {
+  children: React.ReactNode;
+};
 const UserContext = createContext<UserContextType>({} as UserContextType);
 
 export const UserProvider = ({ children }: Props) => {
   const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
+
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const localUser = localStorage.getItem("user");
-    const localToken = localStorage.getItem("token");
-    if (localUser && localToken) {
-      setToken(localToken);
-      fetchProfile(localToken);
-    }
-    setIsReady(true);
+    const hydrateAuth = async () => {
+      const storedToken = localStorage.getItem("token");
+
+      if (!storedToken) {
+        setIsReady(true);
+        return;
+      }
+
+      setToken(storedToken);
+
+      try {
+        const profile = await loadProfile(storedToken);
+
+        if (!profile) {
+          logout();
+        }
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    hydrateAuth();
   }, []);
 
-  const fetchProfile = async (token: string) => {
+  const loadProfile = async (token: string) => {
     try {
       const profile = await profileAPI(token);
-      if (profile) {
-        localStorage.setItem("user", JSON.stringify(profile));
-        setUser(profile);
-      }
+      if (!profile) return;
+
+      setUser(profile);
+      localStorage.setItem("user", JSON.stringify(profile));
+      return profile;
     } catch {
-      toast.warning("Failed to fetch profile");
+      toast.warning("Failed to load profile");
+    }
+  };
+
+  const saveSession = (token: string) => {
+    localStorage.setItem("token", token);
+    setToken(token);
+  };
+
+  const loginUser = async (email: string, password: string) => {
+    try {
+      const res = await loginAPI(email, password);
+      if (!res) return;
+
+      saveSession(res.data.token);
+
+      const profile = await loadProfile(res.data.token);
+      if (!profile) return;
+
+      toast.success("Login successful!");
+
+      await awardPoints("LOGIN", profile.admissionId, profile.lastName);
+
+      router.push("/dashboard");
+    } catch {
+      toast.error("Login failed");
     }
   };
 
@@ -69,83 +113,64 @@ export const UserProvider = ({ children }: Props) => {
     courseName: string,
     gender: string,
     password: string,
-    confirmPassword: string,
+    confirmPassword: string
   ) => {
-    await registerAPI(
-      email,
-      admissionYear,
-      admissionId,
-      courseName,
-      gender,
-      password,
-      confirmPassword,
-    )
-      .then(async (res) => {
-        if (res) {
-          localStorage.setItem("token", res.data.token);
-          setToken(res.data.token);
-          await fetchProfile(res.data.token);
-          toast.success("Register Success!");
-          router.push("/dashboard");
-        }
-      })
-      .catch(() => toast.warning("Server error occurred"));
-  };
+    try {
+      const res = await registerAPI(
+        email,
+        admissionYear,
+        admissionId,
+        courseName,
+        gender,
+        password,
+        confirmPassword
+      );
 
-  const loginUser = async (email: string, password: string) => {
-    await loginAPI(email, password)
-      .then(async (res) => {
-        if (res) {
-          localStorage.setItem("token", res.data.token);
-          setToken(res.data.token);
-          await fetchProfile(res.data.token);
-          toast.success("Login Success!");
-          if (!user) {
-            console.log("no user");
-            return;
-          }
-          await awardPoints("LOGIN", user.admissionId, user.lastName)
-          router.push("/dashboard");
-        }
-      })
-      .catch(() => toast.warning("Server error occurred"));
-  };
+      if (!res) return;
 
-  const isLoggedIn = () => !!user;
+      saveSession(res.data.token);
+      await loadProfile(res.data.token);
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-    setToken(null);
-    router.push("/");
+      toast.success("Registration successful!");
+      router.push("/dashboard");
+    } catch {
+      toast.error("Registration failed");
+    }
   };
 
   const completeUserProfile = async (firstName: string, lastName: string) => {
     if (!token) {
-      toast.error("No token found. Please log in again.");
+      toast.error("Session expired. Please log in again.");
       return;
     }
+
     try {
       await completeProfileAPI(token, firstName, lastName);
-      await fetchProfile(token);
-      toast.success("Profile completed successfully!");
+      await loadProfile(token);
+
+      toast.success("Profile completed!");
       router.push("/dashboard/profile");
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Failed to complete profile");
     }
+  };
+
+  const logout = () => {
+    localStorage.clear();
+    setUser(null);
+    setToken(null);
+    router.push("/");
   };
   return (
     <UserContext.Provider
       value={{
-        loginUser,
         user,
         token,
-        logout,
-        isLoggedIn,
+        loginUser,
         registerUser,
+        logout,
         completeUserProfile,
+        isLoggedIn: isReady && !!user,
       }}
     >
       {isReady ? children : null}
@@ -153,4 +178,4 @@ export const UserProvider = ({ children }: Props) => {
   );
 };
 
-export const useAuth = () => React.useContext(UserContext);
+export const useAuth = () => useContext(UserContext);

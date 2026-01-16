@@ -22,14 +22,13 @@ import type { ChatMessage } from "@/Models/ChatMessage";
 
 export default function ChatPage() {
   const { user, isLoggedIn } = useAuth();
-  const isAuthenticated = isLoggedIn();
 
   const [staff, setStaff] = useState<Staff[]>([]);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
+    if (!isLoggedIn || !user) return;
 
     const loadData = async () => {
       try {
@@ -63,11 +62,11 @@ export default function ChatPage() {
     };
 
     loadData();
-  }, [isAuthenticated, user]);
+  }, [isLoggedIn, user]);
 
   /* ---------------- Guards ---------------- */
 
-  if (!isAuthenticated || !user) {
+  if (!isLoggedIn || !user) {
     return (
       <main className="container mx-auto px-6 py-20 text-center">
         <h1 className="text-2xl font-bold text-foreground">Chat</h1>

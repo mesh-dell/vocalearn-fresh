@@ -13,12 +13,18 @@ export default function AssignmentsPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const getClassFromAdmissionId = (admissionId: string) => {
+    const parts = admissionId.split("/");
+    return parts.length > 1 ? parts[1] : "";
+  };
+
   useEffect(() => {
-    if (!user) return;
+    if (!user?.admissionId) return;
+    const className = getClassFromAdmissionId(user.admissionId);
 
     const fetchAssignments = async () => {
       setLoading(true);
-      const res = await assignmentsGetAPI(user.className);
+      const res = await assignmentsGetAPI(className!);
       if (res) setAssignments(res);
       setLoading(false);
     };
