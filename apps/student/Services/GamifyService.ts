@@ -1,5 +1,4 @@
 import axios from "axios";
-import { toast } from "react-toastify";
 
 const baseURL = "http://localhost:8080";
 
@@ -28,8 +27,6 @@ export async function awardPoints(
       admissionId,
       studentName,
     });
-
-    toast.success(`🎉 Congratulations! You earned +${points} points!`);
   } catch (err) {
     console.error("Gamify award failed:", err);
   }

@@ -97,7 +97,6 @@ export function useGamifyTimer() {
         }
       );
 
-      toast.success(`🔥 You earned +${points} points for staying active!`);
     } catch (err) {
       console.error("Gamify timer failed:", err);
     }
