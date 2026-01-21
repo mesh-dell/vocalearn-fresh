@@ -18,7 +18,7 @@ export const loginAPI = async (email: string, password: string) => {
 export const registerAPI = async (
   email: string,
   password: string,
-  confirmPassword: string
+  confirmPassword: string,
 ) => {
   try {
     return await axios.post<UserProfileToken>(`${API_BASE}/auth/register`, {
@@ -39,6 +39,22 @@ export const profileAPI = async (token: string) => {
       },
     });
     return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const forgotPasswordAPI = async (email: string) => {
+  try {
+    return await axios.post(`${API_BASE}/forgot`, { email });
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const resetPasswordAPI = async (token: string, newPassword: string) => {
+  try {
+    return await axios.post(`${API_BASE}/reset`, { token, newPassword });
   } catch (error) {
     handleError(error);
   }
