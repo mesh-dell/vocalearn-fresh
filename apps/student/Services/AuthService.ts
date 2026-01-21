@@ -22,7 +22,7 @@ export const registerAPI = async (
   courseName: string,
   gender: string,
   password: string,
-  confirmPassword: string
+  confirmPassword: string,
 ) => {
   try {
     return await axios.post<UserProfileToken>(`${API_BASE}/auth/register`, {
@@ -55,7 +55,7 @@ export const profileAPI = async (token: string) => {
 export const completeProfileAPI = async (
   token: string,
   firstName: string,
-  lastName: string
+  lastName: string,
 ) => {
   try {
     const res = await axios.post<UserProfile>(
@@ -65,9 +65,25 @@ export const completeProfileAPI = async (
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
     return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const forgotPasswordAPI = async (email: string) => {
+  try {
+    return await axios.post(`${API_BASE}/forgot`, { email });
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const resetPasswordAPI = async (token: string, newPassword: string) => {
+  try {
+    return await axios.post(`${API_BASE}/reset`, { token, newPassword });
   } catch (error) {
     handleError(error);
   }
