@@ -58,7 +58,7 @@ export default function ChatConversationPage() {
       await Promise.all(
         formatted
           .filter((m) => m.sender === studentEmail && !m.read)
-          .map((m) => ChatMarkAsReadAPI(m.id))
+          .map((m) => ChatMarkAsReadAPI(m.id)),
       );
     };
 
@@ -75,7 +75,7 @@ export default function ChatConversationPage() {
     });
 
     client.onConnect = () => {
-      client.subscribe(`/user/${user.email}/private`, async (frame) => {
+      client.subscribe(`/topic/private.${user.email}`, async (frame) => {
         if (!frame.body) return;
 
         const msg = JSON.parse(frame.body);
@@ -119,19 +119,6 @@ export default function ChatConversationPage() {
         content: message,
       }),
     });
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: prev.length + 1,
-        sender: user.email,
-        content: message,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-    ]);
 
     setMessage("");
   };

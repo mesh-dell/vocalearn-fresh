@@ -54,11 +54,11 @@ export default function ChatConversationPage() {
               hour: "2-digit",
               minute: "2-digit",
             }),
-          }))
+          })),
         );
 
         const unread = res.data.filter(
-          (msg) => msg.sender === instructorEmail && !msg.read
+          (msg) => msg.sender === instructorEmail && !msg.read,
         );
 
         await Promise.all(unread.map((m) => ChatMarkAsReadAPI(m.id)));
@@ -82,7 +82,7 @@ export default function ChatConversationPage() {
     });
 
     client.onConnect = () => {
-      client.subscribe(`/user/${user.email}/private`, (frame) => {
+      client.subscribe(`/topic/private.${user.email}`, (frame) => {
         if (!frame.body) return;
 
         const msg = JSON.parse(frame.body);
@@ -123,19 +123,6 @@ export default function ChatConversationPage() {
         content: message,
       }),
     });
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        sender: user.email,
-        content: message,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-    ]);
 
     setMessage("");
   };

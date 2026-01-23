@@ -86,7 +86,7 @@ export default function ChatConversationPage() {
     });
 
     client.onConnect = () => {
-      client.subscribe(`/user/${user.email}/private`, async (frame) => {
+      client.subscribe(`/topic/private.${user.email}`, async (frame) => {
         if (!frame.body) return;
 
         const msg = JSON.parse(frame.body);

@@ -78,7 +78,7 @@ export default function ChatStaffConversationPage() {
     });
 
     client.onConnect = () => {
-      client.subscribe(`/user/${user.emailAddress}/private`, async (frame) => {
+      client.subscribe(`/topic/private.${user.emailAddress}`, async (frame) => {
         if (!frame.body) return;
 
         const msg = JSON.parse(frame.body);
@@ -123,19 +123,6 @@ export default function ChatStaffConversationPage() {
         content: message,
       }),
     });
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: prev.length + 1,
-        sender: user.emailAddress,
-        content: message,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-    ]);
 
     setMessage("");
   };
