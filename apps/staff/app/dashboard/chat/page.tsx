@@ -43,10 +43,10 @@ export default function ChatPage() {
 
           if (res?.data) {
             counts[student.email] = res.data.filter(
-              (msg) => msg.sender === student.email && msg.read === false
+              (msg) => msg.sender === student.email && msg.read === false,
             ).length;
           }
-        })
+        }),
       );
 
       setUnreadCounts(counts);
@@ -63,6 +63,24 @@ export default function ChatPage() {
         <p className="text-muted-foreground">
           Start or continue conversations with your students
         </p>
+      </div>
+
+      {/* Chat with Admin */}
+      <div>
+        <Card className="hover:shadow-md transition cursor-pointer">
+          <Link href="/dashboard/chat/admin" className="block">
+            <CardContent className="flex items-center justify-between p-6">
+              <div>
+                <h2 className="text-lg font-semibold">Chat with Admin</h2>
+                <p className="text-sm text-muted-foreground">
+                  Contact system administrator for support or issues
+                </p>
+              </div>
+
+              <Button variant="outline">Open</Button>
+            </CardContent>
+          </Link>
+        </Card>
       </div>
 
       {/* Students */}
@@ -89,7 +107,7 @@ export default function ChatPage() {
                     <TooltipTrigger asChild>
                       <Link
                         href={`/dashboard/chat/${encodeURIComponent(
-                          student.email
+                          student.email,
                         )}`}
                       >
                         <Button variant="default" className="relative">

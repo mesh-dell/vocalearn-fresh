@@ -68,7 +68,9 @@ export default function AdminDashboardPage() {
         {/* Institution Management */}
         <Card className="hover:shadow-md transition border border-border">
           <CardHeader className="flex items-center justify-between pb-2">
-            <CardTitle className="text-xl font-semibold">Institutions</CardTitle>
+            <CardTitle className="text-xl font-semibold">
+              Institutions
+            </CardTitle>
             <GraduationCap className="h-6 w-6 text-accent" />
           </CardHeader>
           <CardContent>
@@ -83,19 +85,41 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Optional Settings Card */}
+        {/* Chat with Staff */}
         <Card className="hover:shadow-md transition border border-border">
           <CardHeader className="flex items-center justify-between pb-2">
-            <CardTitle className="text-xl font-semibold">Settings</CardTitle>
+            <CardTitle className="text-xl font-semibold">
+              Chat with Staff
+            </CardTitle>
+            <Users className="h-6 w-6 text-accent" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              Communicate directly with staff members in real time.
+            </p>
+            <Link href="/dashboard/chat-staff">
+              <Button variant="default" className="w-full">
+                Open Chat
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        {/* VocaLearn Signature */}
+        <Card className="hover:shadow-md transition border border-border">
+          <CardHeader className="flex items-center justify-between pb-2">
+            <CardTitle className="text-xl font-semibold">
+              VocaLearn Signature
+            </CardTitle>
             <Settings className="h-6 w-6 text-accent" />
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              Configure system-wide preferences and LMS options.
+              Add or update the official VocaLearn system signature.
             </p>
-            <Link href="/dashboard/settings">
+            <Link href="/dashboard/signature">
               <Button variant="default" className="w-full">
-                Go to Settings
+                Manage Signature
               </Button>
             </Link>
           </CardContent>
