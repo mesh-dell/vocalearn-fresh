@@ -26,3 +26,16 @@ export const addInstitutionApi = async (data: FormData) => {
   );
   return res.data;
 };
+
+export const addSignatureApi = async (data: FormData) => {
+  const res = await axios.post(
+    "http://localhost:8080/admin/add/signature",
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return res.data;
+}
