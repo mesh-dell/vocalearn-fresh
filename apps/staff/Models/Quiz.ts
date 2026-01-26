@@ -5,3 +5,9 @@ export interface QuizPost {
   courseId: number;
   moduleId: number;
 }
+
+export type QuizAssessmentDto = {
+  quizId: number;
+  title: string;
+  questions: any[];
+};

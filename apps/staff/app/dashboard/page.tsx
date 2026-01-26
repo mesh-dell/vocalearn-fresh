@@ -7,16 +7,16 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function StaffDashboardPage() {
-  const { user, token } = useAuth();
+  const { user, token, isLoggedIn } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!token || !user) {
+    if (!isLoggedIn) {
       router.push("/login");
     }
-  }, [token, user, router]);
+  }, [isLoggedIn, router]);
 
-  if (!token || !user) {
+  if (!isLoggedIn || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <p className="text-muted-foreground">Checking authentication...</p>

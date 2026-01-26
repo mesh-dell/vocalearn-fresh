@@ -1,8 +1,13 @@
+import { CatAssessmentDto } from "./Cat";
+import { QuizAssessmentDto } from "./Quiz";
+
 export type ModuleDto = {
   week: string;
   moduleName: string;
   content: string; // HTML content
   moduleId: number;
+  quizAssessmentDto: QuizAssessmentDto[];
+  status: "ACTIVE" | "INACTIVE";
 };
 
 export type CourseOverview = {
@@ -16,6 +21,7 @@ export type CourseGet = {
   description: string;
   courseOverview: CourseOverview;
   moduleDto: ModuleDto[];
+  catAssessmentDto: CatAssessmentDto[];
 };
 
 
