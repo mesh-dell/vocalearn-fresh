@@ -14,6 +14,13 @@ import {
   fetchCourseModulesAPI,
 } from "@/Services/CourseService";
 import { CourseGet } from "@/Models/Course";
+import Link from "next/link";
+
+type QuizType = {
+  title: string;
+  quizId: number;
+  questions: any[];
+};
 
 type ModuleType = {
   moduleId: number;
@@ -22,6 +29,28 @@ type ModuleType = {
   content: string;
   duration?: string;
   completed?: boolean;
+  quizAssessmentDto?: QuizType[];
+};
+
+type CATType = {
+  title: string;
+  durationMinutes: number;
+  startTime: string;
+  endTime: string;
+  catId: number;
+  questions: any[];
+};
+
+type AssignmentType = {
+  assignmentId: number;
+  title: string;
+  description: string;
+  dueDate: string;
+  totalMarks: number;
+  allowDocuments: boolean;
+  allowImages: boolean;
+  allowVideos: boolean;
+  maxFileSizeMb: number;
 };
 
 export default function CourseDetailPage() {
@@ -33,6 +62,8 @@ export default function CourseDetailPage() {
 
   const [course, setCourse] = useState<CourseGet | null>(null);
   const [modules, setModules] = useState<ModuleType[]>([]);
+  const [cats, setCATs] = useState<CATType[]>([]);
+  const [assignments, setAssignments] = useState<AssignmentType[]>([]);
   const [loading, setLoading] = useState(false);
   const [completedModules, setCompletedModules] = useState<number[]>([]);
 
@@ -43,9 +74,15 @@ export default function CourseDetailPage() {
         const response = await coursesGetAPI();
         if (response?.data) {
           const found = response.data.find(
-            (c: CourseGet) => c.courseOverview.id === courseId
+            (c: CourseGet) => c.courseOverview.id === courseId,
           );
           setCourse(found || null);
+
+          // Extract CATs and Assignments from course data
+          if (found) {
+            setCATs(found.catAssessmentDto || []);
+            setAssignments(found.assignments || []);
+          }
         }
 
         const moduleData = await fetchCourseModulesAPI(courseId);
@@ -90,7 +127,7 @@ export default function CourseDetailPage() {
     try {
       const res = await coursesModuleCompleteAPI(
         { moduleId, courseId: course.courseOverview.id },
-        token
+        token,
       );
       if (res) {
         setCompletedModules((prev) => [...prev, moduleId]);
@@ -145,6 +182,68 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
+      {/* CATs Section */}
+      {cats.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-foreground sm:text-2xl">
+            Continuous Assessment Tests (CATs)
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {cats.map((cat) => (
+              <div
+                key={cat.catId}
+                className="rounded-lg border bg-card p-4 shadow-sm"
+              >
+                <h3 className="font-semibold text-foreground mb-2">
+                  {cat.title}
+                </h3>
+                <div className="text-sm text-muted-foreground space-y-1 mb-3">
+                  <p>Duration: {cat.durationMinutes} minutes</p>
+                  <p>Questions: {cat.questions.length}</p>
+                </div>
+                {cat.questions.length > 0 && (
+                  <Link href={`/dashboard/course/${courseId}/cat/${cat.catId}`}>
+                    <Button className="w-full">View CAT</Button>
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Assignments Section */}
+      {assignments.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-foreground sm:text-2xl">
+            Assignments
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {assignments.map((assignment) => (
+              <div
+                key={assignment.assignmentId}
+                className="rounded-lg border bg-card p-4 shadow-sm"
+              >
+                <h3 className="font-semibold text-foreground mb-2">
+                  {assignment.title}
+                </h3>
+                <div className="text-sm text-muted-foreground space-y-1 mb-3">
+                  <p>Total Marks: {assignment.totalMarks}</p>
+                  <p>
+                    Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                  </p>
+                </div>
+                <Link
+                  href={`/dashboard/course/${courseId}/assignment/${assignment.assignmentId}`}
+                >
+                  <Button className="w-full">View Assignment</Button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Modules */}
       <div className="space-y-6">
         <h2 className="text-xl font-bold text-foreground sm:text-2xl">
@@ -159,13 +258,15 @@ export default function CourseDetailPage() {
           <div className="space-y-6">
             {modules.map((module) => {
               const isCompleted = completedModules.includes(module.moduleId);
+              const hasQuizzes =
+                module.quizAssessmentDto && module.quizAssessmentDto.length > 0;
 
               return (
                 <div
                   key={module.moduleId}
                   className="w-full rounded-lg border-l-4 border-accent/70 bg-card p-4 shadow-sm sm:p-6"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-4">
                     <h3 className="text-base font-semibold text-foreground sm:text-lg lg:text-xl">
                       {module.week}: {module.moduleName}
                     </h3>
@@ -188,6 +289,33 @@ export default function CourseDetailPage() {
                     className="prose text-foreground dark:prose-invert mt-4 max-w-none"
                     dangerouslySetInnerHTML={{ __html: module.content }}
                   />
+
+                  {/* Module Quizzes */}
+                  {hasQuizzes && (
+                    <div className="mt-4 pt-4 border-t">
+                      <h4 className="font-semibold text-foreground mb-3">
+                        Quizzes for this module:
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {module.quizAssessmentDto!.map((quiz) => {
+                          if (!quiz.questions || quiz.questions.length === 0)
+                            return null;
+
+                          return (
+                            <Link
+                              key={quiz.quizId}
+                              href={`/dashboard/course/${courseId}/quiz/${quiz.quizId}?moduleId=${module.moduleId}`}
+                            >
+                              <Button variant="outline">
+                                View {quiz.title} ({quiz.questions.length}{" "}
+                                questions)
+                              </Button>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

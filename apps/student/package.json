@@ -22,7 +22,8 @@
     "react-hook-form": "^7.70.0",
     "react-toastify": "^11.0.5",
     "sockjs-client": "^1.6.1",
-    "yup": "^1.7.1"
+    "yup": "^1.7.1",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

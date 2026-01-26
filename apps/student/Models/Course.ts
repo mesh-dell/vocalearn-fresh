@@ -1,7 +1,23 @@
+import { CatAssessmentDto } from "./Cat";
+import { QuizAssessmentDto } from "./Quiz";
+
+type AssignmentType = {
+  assignmentId: number;
+  title: string;
+  description: string;
+  dueDate: string;
+  totalMarks: number;
+  allowDocuments: boolean;
+  allowImages: boolean;
+  allowVideos: boolean;
+  maxFileSizeMb: number;
+};
 export type ModuleDto = {
   week: string;
   moduleName: string;
   content: string; // HTML content
+  quizAssessmentDto: QuizAssessmentDto[];
+  status: "ACTIVE" | "INACTIVE";
 };
 
 export type CourseOverview = {
@@ -22,6 +38,8 @@ export type CourseGet = {
   description: string;
   courseOverview: CourseOverview;
   moduleDto: ModuleDto[];
+  catAssessmentDto: CatAssessmentDto[];
+  assignments: AssignmentType[];
 };
 
 export type EnrolledCourse = {

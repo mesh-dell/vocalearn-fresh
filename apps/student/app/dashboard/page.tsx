@@ -102,21 +102,12 @@ export default function DashboardPage() {
                       </p>
                       <Progress value={progress} className="mt-2 h-2" />
                     </div>
-
-                    {progress === 100 ? (
-                      <p className="mt-4 rounded-md bg-primary px-3 py-1.5 text-center text-sm font-medium text-primary-foreground">
-                        Course finished
-                      </p>
-                    ) : (
-                      <Link
-                        href={`/dashboard/course/${course.courseId}`}
-                        className="block"
-                      >
-                        <Button className="mt-4 w-full">
-                          Continue Learning
-                        </Button>
-                      </Link>
-                    )}
+                    <Link
+                      href={`/dashboard/course/${course.courseId}`}
+                      className="block"
+                    >
+                      <Button className="mt-4 w-full">Continue Learning</Button>
+                    </Link>
                   </CardContent>
                 </Card>
               );
