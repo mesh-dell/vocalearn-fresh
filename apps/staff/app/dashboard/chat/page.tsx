@@ -15,6 +15,17 @@ export default function ChatPage() {
 
   const [students, setStudents] = useState<Student[]>([]);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [search, setSearch] = useState("");
+
+  const filteredStudents = students.filter((student) => {
+    const q = search.toLowerCase();
+
+    return (
+      student.email.toLowerCase().includes(q) ||
+      student.className?.toLowerCase().includes(q) ||
+      student.admissionId?.toLowerCase().includes(q)
+    );
+  });
 
   /* ---------------- Fetch students ---------------- */
   useEffect(() => {
@@ -86,9 +97,23 @@ export default function ChatPage() {
       {/* Students */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold">Students</h2>
+        <div>
+          <input
+            type="text"
+            placeholder="Search students..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
 
         <div className="space-y-4">
-          {students.map((student) => {
+          {filteredStudents.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No students match your search.
+            </p>
+          )}
+          {filteredStudents.map((student) => {
             const unread = unreadCounts[student.email] ?? 0;
 
             return (

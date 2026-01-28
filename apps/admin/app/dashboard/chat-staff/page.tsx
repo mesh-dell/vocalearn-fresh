@@ -26,6 +26,18 @@ export default function ChatStaffPage() {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  const filteredStaff = staff.filter((member) => {
+    const q = search.toLowerCase();
+
+    return (
+      member.firstName.toLowerCase().includes(q) ||
+      member.lastName.toLowerCase().includes(q) ||
+      member.email.toLowerCase().includes(q) ||
+      member.department?.toLowerCase().includes(q)
+    );
+  });
 
   /* ---------------- Load staff + unread counts ---------------- */
   useEffect(() => {
@@ -112,8 +124,24 @@ export default function ChatStaffPage() {
         <section>
           <h2 className="mb-6 text-2xl font-bold text-foreground">Staff</h2>
 
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Search staff..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
           <div className="space-y-4">
-            {staff.map((member) => {
+            {filteredStaff.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No staff members match your search.
+              </p>
+            )}
+
+            {filteredStaff.map((member) => {
               const unread = unreadCounts[member.email] ?? 0;
 
               return (

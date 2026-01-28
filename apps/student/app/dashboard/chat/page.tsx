@@ -27,6 +27,19 @@ export default function ChatPage() {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
+  const [search, setSearch] = useState("");
+
+  const filteredStaff = staff.filter((instructor) => {
+    const q = search.toLowerCase();
+
+    return (
+      instructor.firstName.toLowerCase().includes(q) ||
+      instructor.lastName.toLowerCase().includes(q) ||
+      instructor.email.toLowerCase().includes(q) ||
+      instructor.department?.toLowerCase().includes(q)
+    );
+  });
+
   useEffect(() => {
     if (!isLoggedIn || !user) return;
 
@@ -41,16 +54,16 @@ export default function ChatPage() {
           staffRes.data.map(async (instructor) => {
             const convo = await ChatGetConversationAPI(
               user.email,
-              instructor.email
+              instructor.email,
             );
 
             const unread =
               convo?.data?.filter(
-                (msg: ChatMessage) => msg.receiver === user.email && !msg.read
+                (msg: ChatMessage) => msg.receiver === user.email && !msg.read,
               ).length ?? 0;
 
             return [instructor.email, unread] as const;
-          })
+          }),
         );
 
         setUnreadCounts(Object.fromEntries(counts));
@@ -100,6 +113,15 @@ export default function ChatPage() {
             Communicate and ask questions to your instructors
           </p>
         </header>
+        <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Search instructors..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
 
         <section>
           <h2 className="mb-6 text-2xl font-bold text-foreground">
@@ -107,7 +129,12 @@ export default function ChatPage() {
           </h2>
 
           <div className="space-y-4">
-            {staff.map((instructor) => {
+            {filteredStaff.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No students match your search.
+              </p>
+            )}
+            {filteredStaff.map((instructor) => {
               const unread = unreadCounts[instructor.email] ?? 0;
 
               return (
@@ -132,7 +159,7 @@ export default function ChatPage() {
                         <TooltipTrigger asChild>
                           <Link
                             href={`/dashboard/chat/${encodeURIComponent(
-                              instructor.email
+                              instructor.email,
                             )}`}
                           >
                             <Button>Chat</Button>
