@@ -36,6 +36,7 @@ export function DashboardNav() {
             <NavLink href="/dashboard/group-chat">Group Chat</NavLink>
             <NavLink href="/dashboard/notifications">Notifications</NavLink>
             <NavLink href="/dashboard/profile">Profile</NavLink>
+            <NavLink href="/dashboard/certificates">Certificates</NavLink>
             <ThemeToggle />
 
             <Button variant="outline" onClick={logout}>
@@ -71,7 +72,9 @@ export function DashboardNav() {
                 <Link href="/dashboard/profile">Profile</Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
-
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/certificates">Certificates</Link>
+              </DropdownMenuItem>
               <DropdownMenuItem className="flex items-center">
                 <ThemeToggle />
                 <span className="ml-2">Toggle theme</span>
