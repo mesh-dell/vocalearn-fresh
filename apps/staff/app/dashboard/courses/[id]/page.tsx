@@ -35,6 +35,7 @@ import {
 } from "@repo/ui/select";
 import { Label } from "@repo/ui/label";
 import { quizGenerateAssessmentAPI } from "@/Services/CourseService";
+import Link from "next/link";
 
 type CatAssessmentGenerationPost = {
   moduleId: number;
@@ -239,7 +240,7 @@ export default function CourseDetailPage() {
   const handleGenerateQuiz = async () => {
     if (!course || !activeQuizId || !activeModuleId) return;
 
-    const payload: QuizAssessmentGenerationPost= {
+    const payload: QuizAssessmentGenerationPost = {
       moduleId: activeModuleId,
       courseId: course.courseOverview.id,
       quizId: activeQuizId,
@@ -277,7 +278,7 @@ export default function CourseDetailPage() {
       return;
     }
 
-    const payload: CatAssessmentGenerationPost= {
+    const payload: CatAssessmentGenerationPost = {
       moduleId: firstModuleId,
       courseId: course.courseOverview.id,
       catId: activeCatId,
@@ -382,6 +383,9 @@ export default function CourseDetailPage() {
           </div>
 
           <div className="flex gap-2">
+            <Link href={`/dashboard/courses/${courseId}/submissions`}>
+            <Button variant="outline">View Submissions</Button>
+            </Link>
             <Button onClick={() => setCatModalOpen(true)}>+ Create CAT</Button>
             <Button
               variant="secondary"
