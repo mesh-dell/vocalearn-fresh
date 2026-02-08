@@ -56,7 +56,7 @@ export const fetchEnrolledCoursesAPI = async (token: string) => {
     });
     return res.data;
   } catch (error) {
-    handleError(error);
+    throw error;
   }
 };
 

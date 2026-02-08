@@ -155,13 +155,9 @@ export default function CourseDetailPage() {
           ← Back to All Courses
         </Button>
 
-        <Button
-          className="bg-accent text-accent-foreground hover:bg-accent/90"
-          onClick={handleEnroll}
-          disabled={loading}
-        >
-          {loading ? "Enrolling..." : "Enroll in Course"}
-        </Button>
+        <Link href={`/dashboard/course/${courseId}/submissions`}>
+          <Button variant="outline">View Submissions</Button>
+        </Link>
       </div>
 
       {/* Course Header */}

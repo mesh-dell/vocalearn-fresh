@@ -2,6 +2,7 @@ import axios from "axios";
 import { QuizSubmission } from "../Models/Quiz";
 import { CatSubmission } from "../Models/Cat";
 import { handleError } from "@/Helpers/ErrorHandle";
+import { Submission } from "@/Models/Submission";
 
 const apiSubmitQuiz = "http://localhost:8080/student/submit/quiz";
 const apiSubmitCat = "http://localhost:8080/student/submit/cat";
@@ -50,6 +51,20 @@ export const submitAssignmentApi = async (data: FormData, token: string) => {
       "Content-Type": "multipart/form-data",
     },
   });
+
+  return res.data;
+};
+
+export const fetchCourseSubmissionsAPI = async (
+  courseId: number,
+  studentAdmissionId: string,
+): Promise<Submission[]> => {
+  const res = await axios.get(
+    `http://localhost:8080/staff/filter/submissions`,
+    {
+      params: { courseId, studentAdmissionId },
+    },
+  );
 
   return res.data;
 };
