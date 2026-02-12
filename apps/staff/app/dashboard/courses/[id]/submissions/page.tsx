@@ -18,31 +18,96 @@ import {
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
 import { Textarea } from "@repo/ui/textarea";
-
-import { UngradedAssignmentSubmission } from "@/Models/Submission";
 import {
-  fetchAllUngradedAssignmentSubmissionsAPI,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/ui/select";
+
+import { Submission } from "@/Models/Submission";
+import { GradedSubmission, GradedAssignmentSubmission } from "@/Models/Grade";
+import {
+  fetchCourseSubmissionsAPI,
+  fetchAllStudentsAPI,
   gradeAssignmentSubmissionAPI,
-} from "@/Services/SubmissionService";
+} from "@/Services/StaffService";
+import {
+  fetchGradedSubmissionAPI,
+  fetchGradedAssignmentSubmissionAPI,
+} from "@/Services/GradeService";
+
+interface Student {
+  email: string;
+  admissionId: string;
+  admissionYear: number;
+  gender: string;
+  className: string;
+  firstName: string;
+  lastName: string;
+}
 
 export default function StaffCourseSubmissionsPage() {
   const { id } = useParams();
   const router = useRouter();
+  const courseId = Number(id);
 
-  const [submissions, setSubmissions] = useState<UngradedAssignmentSubmission[]>([]);
-  const [loading, setLoading] = useState(true);
-  
-  // Dialog state
-  const [isGradeDialogOpen, setIsGradeDialogOpen] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] = useState<UngradedAssignmentSubmission | null>(null);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Grade dialog for Quiz/CAT
+  const [quizGradeOpen, setQuizGradeOpen] = useState(false);
+  const [quizGradeLoading, setQuizGradeLoading] = useState(false);
+  const [selectedQuizGrade, setSelectedQuizGrade] =
+    useState<GradedSubmission | null>(null);
+
+  // Grade dialog for Assignment (view)
+  const [assignmentGradeViewOpen, setAssignmentGradeViewOpen] = useState(false);
+  const [assignmentGradeViewLoading, setAssignmentGradeViewLoading] =
+    useState(false);
+  const [selectedAssignmentGradeView, setSelectedAssignmentGradeView] =
+    useState<GradedAssignmentSubmission | null>(null);
+
+  // Grade dialog for Assignment (grading ungraded)
+  const [assignmentGradeOpen, setAssignmentGradeOpen] = useState(false);
+  const [selectedAssignmentSubmission, setSelectedAssignmentSubmission] =
+    useState<Submission | null>(null);
   const [awardedMarks, setAwardedMarks] = useState("");
   const [feedback, setFeedback] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingGrade, setIsSubmittingGrade] = useState(false);
 
+  // Fetch all students on mount
   useEffect(() => {
-    const loadSubmissions = async () => {
+    const loadStudents = async () => {
       try {
-        const data = await fetchAllUngradedAssignmentSubmissionsAPI(Number(id));
+        const data = await fetchAllStudentsAPI();
+        setStudents(data);
+      } catch (error) {
+        toast.error("Failed to load students");
+        console.error(error);
+      }
+    };
+
+    loadStudents();
+  }, []);
+
+  // Fetch submissions when a student is selected
+  useEffect(() => {
+    if (!selectedStudentId) {
+      setSubmissions([]);
+      return;
+    }
+
+    const loadSubmissions = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchCourseSubmissionsAPI(
+          courseId,
+          selectedStudentId,
+        );
         setSubmissions(data);
       } catch (error) {
         toast.error("Failed to load submissions");
@@ -53,34 +118,56 @@ export default function StaffCourseSubmissionsPage() {
     };
 
     loadSubmissions();
-  }, [id]);
+  }, [selectedStudentId, courseId]);
 
-  const handleDownload = (fileUrl: string, fileName: string) => {
-    const link = document.createElement("a");
-    link.href = fileUrl;
-    link.download = fileName;
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleViewQuizGrade = async (submissionId: number) => {
+    try {
+      setQuizGradeOpen(true);
+      setQuizGradeLoading(true);
+      setSelectedQuizGrade(null);
+
+      const data = await fetchGradedSubmissionAPI(submissionId);
+      setSelectedQuizGrade(data);
+    } catch {
+      toast.error("Failed to load grade");
+      setQuizGradeOpen(false);
+    } finally {
+      setQuizGradeLoading(false);
+    }
   };
 
-  const openGradeDialog = (submission: UngradedAssignmentSubmission) => {
-    setSelectedSubmission(submission);
+  const handleViewAssignmentGrade = async (submissionId: number) => {
+    try {
+      setAssignmentGradeViewOpen(true);
+      setAssignmentGradeViewLoading(true);
+      setSelectedAssignmentGradeView(null);
+
+      const data = await fetchGradedAssignmentSubmissionAPI(submissionId);
+      setSelectedAssignmentGradeView(data);
+    } catch {
+      toast.error("Failed to load assignment grade");
+      setAssignmentGradeViewOpen(false);
+    } finally {
+      setAssignmentGradeViewLoading(false);
+    }
+  };
+
+  const openGradeAssignmentDialog = (submission: Submission) => {
+    setSelectedAssignmentSubmission(submission);
     setAwardedMarks("");
     setFeedback("");
-    setIsGradeDialogOpen(true);
+    setAssignmentGradeOpen(true);
   };
 
-  const closeGradeDialog = () => {
-    setIsGradeDialogOpen(false);
-    setSelectedSubmission(null);
+  const closeGradeAssignmentDialog = () => {
+    setAssignmentGradeOpen(false);
+    setSelectedAssignmentSubmission(null);
     setAwardedMarks("");
     setFeedback("");
   };
 
-  const handleGradeSubmit = async () => {
-    if (!selectedSubmission) return;
+  const handleGradeAssignmentSubmit = async () => {
+    if (!selectedAssignmentSubmission) return;
 
     // Validation
     if (!awardedMarks || isNaN(Number(awardedMarks))) {
@@ -98,155 +185,409 @@ export default function StaffCourseSubmissionsPage() {
       return;
     }
 
-    setIsSubmitting(true);
+    setIsSubmittingGrade(true);
     try {
       await gradeAssignmentSubmissionAPI({
-        submissionId: selectedSubmission.submissionId,
+        submissionId: Number(selectedAssignmentSubmission.submissionId),
         awardedMarks: Number(awardedMarks),
         feedback: feedback.trim(),
       });
 
       toast.success("Assignment graded successfully!");
-      
-      // Remove the graded submission from the list
+
+      // Update the submission status in the list
       setSubmissions((prev) =>
-        prev.filter((sub) => sub.submissionId !== selectedSubmission.submissionId)
+        prev.map((sub) =>
+          sub.submissionId === selectedAssignmentSubmission.submissionId
+            ? { ...sub, submissionStatus: "GRADED" }
+            : sub,
+        ),
       );
-      
-      closeGradeDialog();
+
+      closeGradeAssignmentDialog();
     } catch (error) {
       toast.error("Failed to grade assignment");
       console.error(error);
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittingGrade(false);
     }
   };
 
-  if (loading) {
-    return <p className="text-muted-foreground">Loading submissions…</p>;
-  }
+  const handleDownload = (fileUrl: string, fileName: string) => {
+    const link = document.createElement("a");
+    link.href = `http://localhost:8080/${fileUrl}`;
+    link.download = fileName;
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
-  if (submissions.length === 0) {
-    return (
-      <p className="text-muted-foreground">
-        No ungraded assignment submissions for this course yet.
-      </p>
-    );
-  }
+  const getSelectedStudent = () => {
+    return students.find((s) => s.admissionId === selectedStudentId);
+  };
 
   return (
     <>
       <div className="mx-auto max-w-6xl px-4 py-6 space-y-6">
-        <h1 className="text-2xl font-bold">Ungraded Assignment Submissions</h1>
+        <h1 className="text-2xl font-bold">Course Submissions - Staff View</h1>
+
         <Button variant="outline" onClick={() => router.back()}>
           ← Back to Course
         </Button>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {submissions.map((submission) => (
-            <Card key={submission.submissionId}>
-              <CardContent className="p-4 space-y-3">
-                <div>
-                  <h3 className="font-semibold">
-                    Student: {submission.studentAdmissionId}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {submission.className}
-                  </p>
-                </div>
+        {/* Student Selection */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-2">
+              <Label htmlFor="student-select">Select Student</Label>
+              <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                <SelectTrigger id="student-select" className="w-full">
+                  <SelectValue placeholder="Choose a student to view their submissions" />
+                </SelectTrigger>
+                <SelectContent>
+                  {students.map((student) => (
+                    <SelectItem key={student.admissionId} value={student.admissionId}>
+                      {student.firstName} {student.lastName} ({student.admissionId}) - {student.className}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
 
-                <div className="text-sm text-muted-foreground space-y-1">
-                  <p>
-                    Submitted:{" "}
-                    {new Date(submission.submissionDate).toLocaleString()}
+        {/* Submissions Display */}
+        {selectedStudentId && (
+          <>
+            {loading ? (
+              <p className="text-muted-foreground">Loading submissions…</p>
+            ) : submissions.length === 0 ? (
+              <Card>
+                <CardContent className="p-6">
+                  <p className="text-muted-foreground text-center">
+                    {getSelectedStudent()?.firstName} {getSelectedStudent()?.lastName} has not made any submissions for this course yet.
                   </p>
-                  <p>
-                    Files: <span className="font-medium">{submission.files.length}</span>
-                  </p>
-                </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold">
+                  Submissions by {getSelectedStudent()?.firstName}{" "}
+                  {getSelectedStudent()?.lastName}
+                </h2>
 
-                {/* Files section with download links */}
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {submissions.map((submission) => (
+                    <Card key={submission.submissionId}>
+                      <CardContent className="p-4 space-y-3">
+                        <div>
+                          <h3 className="font-semibold">
+                            {submission.submissionName}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {submission.submissionCourseName}
+                          </p>
+                        </div>
+
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p>
+                            Type:{" "}
+                            <span className="font-medium">
+                              {submission.submissionType}
+                            </span>
+                          </p>
+                          <p>
+                            Submitted:{" "}
+                            {new Date(submission.submissionDate).toLocaleString()}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2">
+                          <Badge
+                            variant={
+                              submission.submissionStatus === "GRADED"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
+                            {submission.submissionStatus}
+                          </Badge>
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2">
+                            {submission.submissionStatus === "GRADED" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  if (submission.submissionType === "ASSIGNMENT") {
+                                    handleViewAssignmentGrade(
+                                      Number(submission.submissionId),
+                                    );
+                                  } else {
+                                    handleViewQuizGrade(
+                                      Number(submission.submissionId),
+                                    );
+                                  }
+                                }}
+                              >
+                                View Grade
+                              </Button>
+                            )}
+
+                            {submission.submissionStatus === "UNGRADED" &&
+                              submission.submissionType === "ASSIGNMENT" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() =>
+                                    openGradeAssignmentDialog(submission)
+                                  }
+                                >
+                                  Grade
+                                </Button>
+                              )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Quiz/CAT Grade View Dialog */}
+      <Dialog open={quizGradeOpen} onOpenChange={setQuizGradeOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedQuizGrade?.quizTitle || "Grade Review"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {quizGradeLoading && (
+            <p className="text-muted-foreground">Loading grade…</p>
+          )}
+
+          {selectedQuizGrade && (
+            <div className="space-y-6">
+              {/* Score summary */}
+              <div className="flex items-center justify-between">
+                <Badge variant="default">
+                  Score: {selectedQuizGrade.totalAwardedPoints} /{" "}
+                  {selectedQuizGrade.totalMaxPoints}
+                </Badge>
+                <p className="text-sm text-muted-foreground">
+                  Student: {selectedQuizGrade.studentAdmissionId}
+                </p>
+              </div>
+
+              {/* Questions */}
+              <div className="space-y-4">
+                {selectedQuizGrade.questions.map((q, index) => (
+                  <Card key={q.questionId}>
+                    <CardContent className="p-4 space-y-3">
+                      <h4 className="font-semibold">
+                        Q{index + 1}. {q.questionText}
+                      </h4>
+
+                      <div className="text-sm space-y-1">
+                        <p>
+                          <span className="font-medium text-red-500">
+                            Student answer:
+                          </span>{" "}
+                          {q.studentAnswer || "—"}
+                        </p>
+
+                        <p>
+                          <span className="font-medium text-green-600">
+                            Correct answer:
+                          </span>{" "}
+                          {q.correctAnswer}
+                        </p>
+
+                        <p className="text-muted-foreground">
+                          Marks: {q.awardedMarks} / {q.maxMarks}
+                        </p>
+                      </div>
+
+                      {q.feedback && (
+                        <div className="text-sm text-muted-foreground border-l-2 pl-3">
+                          {q.feedback}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Assignment Grade View Dialog */}
+      <Dialog
+        open={assignmentGradeViewOpen}
+        onOpenChange={setAssignmentGradeViewOpen}
+      >
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedAssignmentGradeView?.assignmentName ||
+                "Assignment Grade"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {assignmentGradeViewLoading && (
+            <p className="text-muted-foreground">Loading assignment grade…</p>
+          )}
+
+          {selectedAssignmentGradeView && (
+            <div className="space-y-6">
+              {/* Student info */}
+              <p className="text-sm text-muted-foreground">
+                Student: {selectedAssignmentGradeView.studentAdmissionId}
+              </p>
+
+              {/* Assignment description */}
+              {selectedAssignmentGradeView.assignmentDescription && (
                 <div className="space-y-2">
-                  {submission.files.map((file) => (
+                  <h4 className="font-semibold text-sm">Description</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedAssignmentGradeView.assignmentDescription}
+                  </p>
+                </div>
+              )}
+
+              {/* Score summary */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Score</p>
+                      <p className="text-2xl font-bold">
+                        {selectedAssignmentGradeView.awardedMarks} /{" "}
+                        {selectedAssignmentGradeView.maxMarks}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Percentage
+                      </p>
+                      <p className="text-2xl font-bold">
+                        {selectedAssignmentGradeView.percentage.toFixed(1)}%
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <Badge
+                      variant={
+                        selectedAssignmentGradeView.percentage >= 70
+                          ? "default"
+                          : selectedAssignmentGradeView.percentage >= 50
+                            ? "secondary"
+                            : "destructive"
+                      }
+                    >
+                      {selectedAssignmentGradeView.percentage >= 70
+                        ? "Excellent"
+                        : selectedAssignmentGradeView.percentage >= 50
+                          ? "Pass"
+                          : "Needs Improvement"}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Submitted files */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Submitted Files</h4>
+                <div className="space-y-2">
+                  {selectedAssignmentGradeView.files.map((file) => (
                     <div
                       key={file.fileId}
-                      className="flex items-center justify-between p-2 bg-muted rounded-md"
+                      className="flex items-center justify-between p-3 bg-muted rounded-md"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate">
+                        <p className="text-sm font-medium truncate">
                           📄 {file.fileName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {file.fileType}
                         </p>
                       </div>
                       <Button
                         size="sm"
-                        variant="ghost"
-                        className="ml-2 h-7 px-2"
-                        onClick={() => handleDownload(file.fileUrl, file.fileName)}
+                        variant="outline"
+                        className="ml-3"
+                        onClick={() =>
+                          handleDownload(file.fileUrl, file.fileName)
+                        }
                       >
-                        ⬇️ Download
+                        Download
                       </Button>
                     </div>
                   ))}
                 </div>
+              </div>
 
-                <div className="flex items-center justify-between pt-2">
-                  <Badge variant="secondary">{submission.submissionStatus}</Badge>
-
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => openGradeDialog(submission)}
-                    >
-                      Grade
-                    </Button>
-                  </div>
+              {/* Feedback */}
+              {selectedAssignmentGradeView.feedback && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Instructor Feedback</h4>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-sm whitespace-pre-wrap">
+                        {selectedAssignmentGradeView.feedback}
+                      </p>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+              )}
 
-      {/* Grading Dialog */}
-      <Dialog open={isGradeDialogOpen} onOpenChange={setIsGradeDialogOpen}>
-        <DialogContent className="sm:max-w-125">
+              {!selectedAssignmentGradeView.feedback && (
+                <p className="text-sm text-muted-foreground italic">
+                  No feedback provided
+                </p>
+              )}
+
+              {/* Graded date */}
+              <div className="text-sm text-muted-foreground">
+                Graded on:{" "}
+                {new Date(
+                  selectedAssignmentGradeView.gradedAt,
+                ).toLocaleString()}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Grade Assignment Dialog (for ungraded assignments) */}
+      <Dialog open={assignmentGradeOpen} onOpenChange={setAssignmentGradeOpen}>
+        <DialogContent className="sm:max-w-131.25">
           <DialogHeader>
             <DialogTitle>Grade Assignment</DialogTitle>
             <DialogDescription>
-              {selectedSubmission && (
+              {selectedAssignmentSubmission && (
                 <>
-                  Student: {selectedSubmission.studentAdmissionId}
+                  {selectedAssignmentSubmission.submissionName}
                   <br />
-                  Submitted: {new Date(selectedSubmission.submissionDate).toLocaleString()}
+                  Student: {selectedStudentId}
+                  <br />
+                  Submitted:{" "}
+                  {new Date(
+                    selectedAssignmentSubmission.submissionDate,
+                  ).toLocaleString()}
                 </>
               )}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            {/* Display files */}
-            {selectedSubmission && selectedSubmission.files.length > 0 && (
-              <div className="space-y-2">
-                <Label>Submitted Files</Label>
-                {selectedSubmission.files.map((file) => (
-                  <div
-                    key={file.fileId}
-                    className="flex items-center justify-between p-2 bg-muted rounded-md"
-                  >
-                    <p className="text-sm truncate flex-1">📄 {file.fileName}</p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 px-2"
-                      onClick={() => handleDownload(file.fileUrl, file.fileName)}
-                    >
-                      Download
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
             {/* Marks input */}
             <div className="space-y-2">
               <Label htmlFor="marks">Awarded Marks *</Label>
@@ -258,7 +599,7 @@ export default function StaffCourseSubmissionsPage() {
                 placeholder="Enter marks (e.g., 85)"
                 value={awardedMarks}
                 onChange={(e) => setAwardedMarks(e.target.value)}
-                disabled={isSubmitting}
+                disabled={isSubmittingGrade}
               />
             </div>
 
@@ -270,7 +611,7 @@ export default function StaffCourseSubmissionsPage() {
                 placeholder="Provide constructive feedback for the student..."
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                disabled={isSubmitting}
+                disabled={isSubmittingGrade}
                 rows={5}
                 className="resize-none"
               />
@@ -280,16 +621,16 @@ export default function StaffCourseSubmissionsPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={closeGradeDialog}
-              disabled={isSubmitting}
+              onClick={closeGradeAssignmentDialog}
+              disabled={isSubmittingGrade}
             >
               Cancel
             </Button>
             <Button
-              onClick={handleGradeSubmit}
-              disabled={isSubmitting}
+              onClick={handleGradeAssignmentSubmit}
+              disabled={isSubmittingGrade}
             >
-              {isSubmitting ? "Submitting..." : "Submit Grade"}
+              {isSubmittingGrade ? "Submitting..." : "Submit Grade"}
             </Button>
           </DialogFooter>
         </DialogContent>

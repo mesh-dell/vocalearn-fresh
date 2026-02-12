@@ -4,4 +4,6 @@ export type Student = {
   admissionYear: number;
   gender: string;
   className: string;
+  firstName: string;
+  lastName: string;
 };

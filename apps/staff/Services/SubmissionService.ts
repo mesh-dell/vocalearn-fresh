@@ -1,5 +1,6 @@
 import axios from "axios";
 import { GradeAssignmentPayload, Submission, UngradedAssignmentSubmission } from "@/Models/Submission";
+const BASE_URL = "http://localhost:8080";
 
 export const fetchCourseSubmissionsAPI = async (
   courseId: number,
@@ -64,4 +65,14 @@ export const gradeAssignmentSubmissionAPI = async (
     "http://localhost:8080/staff/submission/grade/assignments",
     payload,
   );
+};
+
+export const fetchCourseSubmissionsWithAdmissionIdAPI = async (
+  courseId: number,
+  studentAdmissionId: string,
+): Promise<Submission[]> => {
+  const res = await axios.get(`${BASE_URL}/staff/filter/submissions`, {
+    params: { courseId, studentAdmissionId },
+  });
+  return res.data;
 };
