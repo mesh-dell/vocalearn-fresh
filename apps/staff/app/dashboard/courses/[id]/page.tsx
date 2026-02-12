@@ -519,6 +519,7 @@ export default function CourseDetailPage() {
                     size="sm"
                     variant="secondary"
                     onClick={() => openQuizModal(module.moduleId)}
+                    disabled={module.quizAssessmentDto.length > 0}
                   >
                     + Add Quiz
                   </Button>
