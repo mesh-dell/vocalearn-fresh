@@ -10,6 +10,7 @@ import {
   catGenerateAssessmentAPI,
   courseActivateModuleAPI,
 } from "@/Services/CourseService";
+import { addCertificateCondition } from "@/Services/CertificateConditionService";
 import { QuizPost } from "@/Models/Quiz";
 import { Input } from "@repo/ui/input";
 import { Textarea } from "@repo/ui/textarea";
@@ -94,6 +95,13 @@ export default function CourseDetailPage() {
     maxFileSizeMb: "250",
   });
 
+  // Certificate condition states
+  const [certificateModalOpen, setCertificateModalOpen] = useState(false);
+  const [isCreatingCertificate, setIsCreatingCertificate] = useState(false);
+  const [certificateForm, setCertificateForm] = useState({
+    averagePassMark: "",
+  });
+
   // AI Generation states
   const [quizGenModalOpen, setQuizGenModalOpen] = useState(false);
   const [catGenModalOpen, setCatGenModalOpen] = useState(false);
@@ -108,6 +116,35 @@ export default function CourseDetailPage() {
     noOfOpenEndedQuestions: "2",
     noOfOptions: "4",
   });
+
+  const handleCreateCertificateCondition = async () => {
+    if (!course) return;
+
+    const averagePassMark = Number(certificateForm.averagePassMark);
+
+    if (isNaN(averagePassMark) || averagePassMark < 0 || averagePassMark > 100) {
+      toast.error("Please enter a valid pass mark between 0 and 100");
+      return;
+    }
+
+    try {
+      setIsCreatingCertificate(true);
+      await addCertificateCondition(course.courseOverview.id, averagePassMark);
+
+      setCertificateForm({
+        averagePassMark: "",
+      });
+
+      setCertificateModalOpen(false);
+      toast.success("Certificate condition added successfully!");
+      await refetchCourse();
+    } catch (err) {
+      console.error("Failed to add certificate condition", err);
+      toast.error("Failed to add certificate condition");
+    } finally {
+      setIsCreatingCertificate(false);
+    }
+  };
 
   const handleCreateAssignment = async () => {
     if (!course) return;
@@ -384,8 +421,11 @@ export default function CourseDetailPage() {
 
           <div className="flex gap-2">
             <Link href={`/dashboard/courses/${courseId}/submissions`}>
-            <Button variant="outline">View Submissions</Button>
+              <Button variant="outline">View Submissions</Button>
             </Link>
+            <Button onClick={() => setCertificateModalOpen(true)}>
+              + Certificate Condition
+            </Button>
             <Button onClick={() => setCatModalOpen(true)}>+ Create CAT</Button>
             <Button
               variant="secondary"
@@ -943,6 +983,61 @@ export default function CourseDetailPage() {
               onClick={handleCreateAssignment}
             >
               {isCreatingAssignment ? "Creating..." : "Create Assignment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Certificate Condition Dialog */}
+      <Dialog open={certificateModalOpen} onOpenChange={setCertificateModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Certificate Condition</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="averagePassMark">
+                Average Pass Mark (%)
+              </Label>
+              <Input
+                id="averagePassMark"
+                type="number"
+                min="0"
+                max="100"
+                placeholder="Enter pass mark percentage (0-100)"
+                value={certificateForm.averagePassMark}
+                onChange={(e) =>
+                  setCertificateForm({
+                    ...certificateForm,
+                    averagePassMark: e.target.value,
+                  })
+                }
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Students must achieve this average score across all assessments to
+                receive a certificate.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-6">
+            <Button
+              variant="ghost"
+              onClick={() => setCertificateModalOpen(false)}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              disabled={
+                isCreatingCertificate || !certificateForm.averagePassMark
+              }
+              onClick={handleCreateCertificateCondition}
+            >
+              {isCreatingCertificate
+                ? "Adding..."
+                : "Add Certificate Condition"}
             </Button>
           </DialogFooter>
         </DialogContent>
