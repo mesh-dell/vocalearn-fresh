@@ -159,7 +159,9 @@ export default function CourseDetailPage() {
       });
       setRecommendation(data);
     } catch (error) {
-      toast.info("Failed to load recommendations: Make sure you have completed some assessments in this module to get personalized recommendations.");
+      toast.info(
+        "Failed to load recommendations: Make sure you have completed some assessments in this module to get personalized recommendations.",
+      );
       console.error(error);
       setRecommendationOpen(false);
     } finally {
@@ -364,6 +366,17 @@ export default function CourseDetailPage() {
                   module.quizAssessmentDto &&
                   module.quizAssessmentDto.length > 0;
 
+                const isModuleQuizSubmitted = (module: ModuleType): boolean => {
+                  if (
+                    !module.quizAssessmentDto ||
+                    module.quizAssessmentDto.length === 0
+                  ) {
+                    return false;
+                  }
+
+                  const quiz = module.quizAssessmentDto[0]; // only one quiz per module
+                  return isSubmitted("QUIZ", quiz!.quizId);
+                };
                 return (
                   <div
                     key={module.moduleId}
@@ -397,7 +410,7 @@ export default function CourseDetailPage() {
                               : "bg-success text-success-foreground hover:bg-success/90"
                           }
                           onClick={() => handleModuleComplete(module.moduleId)}
-                          disabled={isCompleted}
+                          disabled={isCompleted || !isModuleQuizSubmitted(module)}
                         >
                           {isCompleted ? "Completed ✓" : "Mark Complete"}
                         </Button>
