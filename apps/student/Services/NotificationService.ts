@@ -19,3 +19,22 @@ export const getNotificationsAPI = async (token: string) => {
     handleError(error);
   }
 };
+
+export const markNotificationAsReadAPI = async (
+  notificationId: number,
+): Promise<void> => {
+  try {
+    await axios.post(
+      `${BASE_URL}/notification/mark/notification/read`,
+      null, // no body
+      {
+        params: {
+          notificationId,
+        },
+      },
+    );
+  } catch (error) {
+    console.error("Failed to mark notification as read:", error);
+    throw error;
+  }
+};

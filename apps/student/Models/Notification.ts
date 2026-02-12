@@ -1,5 +1,8 @@
 export interface Notification {
-  courseName: string;
   className: string;
-  message: string;
+  courseName: string;
+  sentAt: string;   // ISO date string
+  messages: string; // backend uses "messages"
+  read: boolean;
 }
+
