@@ -37,6 +37,7 @@ import {
 import { Label } from "@repo/ui/label";
 import { quizGenerateAssessmentAPI } from "@/Services/CourseService";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type CatAssessmentGenerationPost = {
   moduleId: number;
@@ -69,6 +70,7 @@ export default function CourseDetailPage() {
     quizDescription: "",
     dueDate: "",
   });
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [quizModalOpen, setQuizModalOpen] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<number | null>(null);
@@ -267,13 +269,13 @@ export default function CourseDetailPage() {
 
   const openCatGenModal = (catId: number) => {
     // Check if all modules are active
-    const allModulesActive = course?.moduleDto.every(
-      (m) => m.status === "ACTIVE",
-    );
-    if (!allModulesActive) {
-      toast.error("All modules must be active before generating CAT questions");
-      return;
-    }
+    // const allModulesActive = course?.moduleDto.every(
+    //   (m) => m.status === "ACTIVE",
+    // );
+    // if (!allModulesActive) {
+    //   toast.error("All modules must be active before generating CAT questions");
+    //   return;
+    // }
     setActiveCatId(catId);
     setCatGenModalOpen(true);
   };
@@ -406,7 +408,7 @@ export default function CourseDetailPage() {
         <Button
           variant="outline"
           className="mb-6"
-          onClick={() => window.history.back()}
+          onClick={() => router.push(`/dashboard/courses`)}
         >
           ← Back to Dashboard
         </Button>
@@ -477,7 +479,6 @@ export default function CourseDetailPage() {
                     <Button
                       size="sm"
                       onClick={() => openCatGenModal(cat.catId)}
-                      disabled={!allModulesActive}
                     >
                       ✨ Generate Questions
                     </Button>
