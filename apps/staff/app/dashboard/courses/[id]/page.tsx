@@ -122,7 +122,11 @@ export default function CourseDetailPage() {
 
     const averagePassMark = Number(certificateForm.averagePassMark);
 
-    if (isNaN(averagePassMark) || averagePassMark < 0 || averagePassMark > 100) {
+    if (
+      isNaN(averagePassMark) ||
+      averagePassMark < 0 ||
+      averagePassMark > 100
+    ) {
       toast.error("Please enter a valid pass mark between 0 and 100");
       return;
     }
@@ -427,6 +431,9 @@ export default function CourseDetailPage() {
               + Certificate Condition
             </Button>
             <Button onClick={() => setCatModalOpen(true)}>+ Create CAT</Button>
+            <Link href={`/dashboard/courses/${courseId}/add-module`}>
+              <Button>+ Add Module</Button>
+            </Link>
             <Button
               variant="secondary"
               onClick={() => setAssignmentModalOpen(true)}
@@ -990,7 +997,10 @@ export default function CourseDetailPage() {
       </Dialog>
 
       {/* Certificate Condition Dialog */}
-      <Dialog open={certificateModalOpen} onOpenChange={setCertificateModalOpen}>
+      <Dialog
+        open={certificateModalOpen}
+        onOpenChange={setCertificateModalOpen}
+      >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Add Certificate Condition</DialogTitle>
@@ -998,9 +1008,7 @@ export default function CourseDetailPage() {
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="averagePassMark">
-                Average Pass Mark (%)
-              </Label>
+              <Label htmlFor="averagePassMark">Average Pass Mark (%)</Label>
               <Input
                 id="averagePassMark"
                 type="number"
@@ -1016,8 +1024,8 @@ export default function CourseDetailPage() {
                 }
               />
               <p className="text-sm text-muted-foreground mt-1">
-                Students must achieve this average score across all assessments to
-                receive a certificate.
+                Students must achieve this average score across all assessments
+                to receive a certificate.
               </p>
             </div>
           </div>

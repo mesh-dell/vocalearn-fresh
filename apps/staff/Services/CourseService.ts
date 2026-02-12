@@ -4,6 +4,7 @@ import axios from "axios";
 import { QuizPost } from "@/Models/Quiz";
 import { CatPost } from "@/Models/Cat";
 import { AssessmentPost } from "@/Models/Assessment";
+import { CreateCourseModuleRequest } from "@/Models/CourseModule";
 
 const api = "http://localhost:8080/course/get/all";
 const apiPost = "http://localhost:8080/course/add";
@@ -76,7 +77,7 @@ export const assessmentCreateAPI = async (assignment: AssessmentPost) => {
   try {
     const response = await axios.post(
       "http://localhost:8080/course/create/assignment",
-      assignment
+      assignment,
     );
     return response;
   } catch (error) {
@@ -115,6 +116,20 @@ export const courseActivateModuleAPI = async (payload: {
   try {
     const response = await axios.post(
       "http://localhost:8080/course/mark/module/active",
+      payload,
+    );
+    return response;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const createCourseModuleAPI = async (
+  payload: CreateCourseModuleRequest,
+) => {
+  try {
+    const response = await axios.post(
+      "http://localhost:8080/course/create/module",
       payload,
     );
     return response;
