@@ -13,7 +13,9 @@ import {
   coursesModuleCompleteAPI,
   fetchCourseModulesAPI,
 } from "@/Services/CourseService";
+import { fetchCourseSubmissionsAPI } from "@/Services/AssessmentSubmissionService";
 import { CourseGet } from "@/Models/Course";
+import { Submission } from "@/Models/Submission";
 import Link from "next/link";
 
 type QuizType = {
@@ -66,6 +68,7 @@ export default function CourseDetailPage() {
   const [assignments, setAssignments] = useState<AssignmentType[]>([]);
   const [loading, setLoading] = useState(false);
   const [completedModules, setCompletedModules] = useState<number[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
 
   // Fetch course and modules
   useEffect(() => {
@@ -87,13 +90,32 @@ export default function CourseDetailPage() {
 
         const moduleData = await fetchCourseModulesAPI(courseId);
         if (Array.isArray(moduleData)) setModules(moduleData);
+
+        // Fetch submissions if user is available
+        if (user?.admissionId) {
+          const submissionsData = await fetchCourseSubmissionsAPI(
+            courseId,
+            user.admissionId,
+          );
+          setSubmissions(submissionsData || []);
+        }
       } catch {
         toast.error("Failed to load course details.");
       }
     };
 
     fetchCourseAndModules();
-  }, [courseId]);
+  }, [courseId, user?.admissionId]);
+
+  // Helper function to check if an item is already submitted
+  const isSubmitted = (
+    type: "CAT" | "QUIZ" | "ASSIGNMENT",
+    targetId: number,
+  ): boolean => {
+    return submissions.some(
+      (sub) => sub.submissionType === type && sub.targetId === String(targetId),
+    );
+  };
 
   // Enroll in course
   const handleEnroll = async () => {
@@ -185,25 +207,41 @@ export default function CourseDetailPage() {
             Continuous Assessment Tests (CATs)
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {cats.map((cat) => (
-              <div
-                key={cat.catId}
-                className="rounded-lg border bg-card p-4 shadow-sm"
-              >
-                <h3 className="font-semibold text-foreground mb-2">
-                  {cat.title}
-                </h3>
-                <div className="text-sm text-muted-foreground space-y-1 mb-3">
-                  <p>Duration: {cat.durationMinutes} minutes</p>
-                  <p>Questions: {cat.questions.length}</p>
+            {cats.map((cat) => {
+              const submitted = isSubmitted("CAT", cat.catId);
+
+              return (
+                <div
+                  key={cat.catId}
+                  className="rounded-lg border bg-card p-4 shadow-sm"
+                >
+                  <h3 className="font-semibold text-foreground mb-2">
+                    {cat.title}
+                  </h3>
+                  <div className="text-sm text-muted-foreground space-y-1 mb-3">
+                    <p>Duration: {cat.durationMinutes} minutes</p>
+                    <p>Questions: {cat.questions.length}</p>
+                    {submitted && (
+                      <p className="text-success font-medium">✓ Submitted</p>
+                    )}
+                  </div>
+                  {cat.questions.length > 0 && (
+                    <Link
+                      href={`/dashboard/course/${courseId}/cat/${cat.catId}`}
+                      className={submitted ? "pointer-events-none" : ""}
+                    >
+                      <Button
+                        className="w-full"
+                        disabled={submitted}
+                        variant={submitted ? "outline" : "default"}
+                      >
+                        {submitted ? "Already Submitted" : "View CAT"}
+                      </Button>
+                    </Link>
+                  )}
                 </div>
-                {cat.questions.length > 0 && (
-                  <Link href={`/dashboard/course/${courseId}/cat/${cat.catId}`}>
-                    <Button className="w-full">View CAT</Button>
-                  </Link>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -215,27 +253,44 @@ export default function CourseDetailPage() {
             Assignments
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {assignments.map((assignment) => (
-              <div
-                key={assignment.assignmentId}
-                className="rounded-lg border bg-card p-4 shadow-sm"
-              >
-                <h3 className="font-semibold text-foreground mb-2">
-                  {assignment.title}
-                </h3>
-                <div className="text-sm text-muted-foreground space-y-1 mb-3">
-                  <p>Total Marks: {assignment.totalMarks}</p>
-                  <p>
-                    Due: {new Date(assignment.dueDate).toLocaleDateString()}
-                  </p>
-                </div>
-                <Link
-                  href={`/dashboard/course/${courseId}/assignment/${assignment.assignmentId}`}
+            {assignments.map((assignment) => {
+              const submitted = isSubmitted(
+                "ASSIGNMENT",
+                assignment.assignmentId,
+              );
+
+              return (
+                <div
+                  key={assignment.assignmentId}
+                  className="rounded-lg border bg-card p-4 shadow-sm"
                 >
-                  <Button className="w-full">View Assignment</Button>
-                </Link>
-              </div>
-            ))}
+                  <h3 className="font-semibold text-foreground mb-2">
+                    {assignment.title}
+                  </h3>
+                  <div className="text-sm text-muted-foreground space-y-1 mb-3">
+                    <p>Total Marks: {assignment.totalMarks}</p>
+                    <p>
+                      Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                    </p>
+                    {submitted && (
+                      <p className="text-success font-medium">✓ Submitted</p>
+                    )}
+                  </div>
+                  <Link
+                    href={`/dashboard/course/${courseId}/assignment/${assignment.assignmentId}`}
+                    className={submitted ? "pointer-events-none" : ""}
+                  >
+                    <Button
+                      className="w-full"
+                      disabled={submitted}
+                      variant={submitted ? "outline" : "default"}
+                    >
+                      {submitted ? "Already Submitted" : "View Assignment"}
+                    </Button>
+                  </Link>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -297,14 +352,24 @@ export default function CourseDetailPage() {
                           if (!quiz.questions || quiz.questions.length === 0)
                             return null;
 
+                          const quizSubmitted = isSubmitted(
+                            "QUIZ",
+                            quiz.quizId,
+                          );
+
                           return (
                             <Link
                               key={quiz.quizId}
                               href={`/dashboard/course/${courseId}/quiz/${quiz.quizId}?moduleId=${module.moduleId}`}
+                              className={quizSubmitted ? "pointer-events-none" : ""}
                             >
-                              <Button variant="outline">
-                                View {quiz.title} ({quiz.questions.length}{" "}
-                                questions)
+                              <Button
+                                variant={quizSubmitted ? "outline" : "outline"}
+                                disabled={quizSubmitted}
+                              >
+                                {quizSubmitted ? "✓ " : ""}
+                                {quiz.title} ({quiz.questions.length} questions)
+                                {quizSubmitted ? " - Submitted" : ""}
                               </Button>
                             </Link>
                           );
