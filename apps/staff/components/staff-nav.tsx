@@ -33,7 +33,6 @@ export function StaffNav() {
           <nav className="hidden md:flex items-center gap-6">
             <NavLink href="/dashboard">Dashboard</NavLink>
             <NavLink href="/dashboard/courses">Courses</NavLink>
-            <NavLink href="/dashboard/assignments">Assignments</NavLink>
             <NavLink href="/dashboard/chat">Chat</NavLink>
             <NavLink href="/dashboard/notifications">Notifications</NavLink>
 
@@ -58,9 +57,6 @@ export function StaffNav() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/dashboard/courses">Courses</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/assignments">Assignments</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/dashboard/chat">Chat</Link>

@@ -31,7 +31,6 @@ export function DashboardNav() {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-6">
             <NavLink href="/dashboard">My Courses</NavLink>
-            <NavLink href="/dashboard/assignments">Assignments</NavLink>
             <NavLink href="/dashboard/chat">Chat</NavLink>
             <NavLink href="/dashboard/group-chat">Group Chat</NavLink>
             <NavLink href="/dashboard/notifications">Notifications</NavLink>
@@ -55,9 +54,6 @@ export function DashboardNav() {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem asChild>
                 <Link href="/dashboard">My Courses</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/assignments">Assignments</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/dashboard/chat">Chat</Link>
