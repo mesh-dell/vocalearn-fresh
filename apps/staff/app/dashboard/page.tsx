@@ -53,17 +53,15 @@ export default function StaffDashboardPage() {
           title="Manage Courses"
           description="Create and edit courses for your students"
         />
-
-        <DashboardLink
-          href="/dashboard/assignments"
-          title="Assignments"
-          description="Create, view, and grade submissions"
-        />
-
         <DashboardLink
           href="/dashboard/chat"
           title="Student Chat"
           description="Communicate with your students in real-time"
+        />
+        <DashboardLink
+          href="/dashboard/notifications"
+          title="Manage Notifications"
+          description="Monitor and send notifications to your students"
         />
       </div>
     </main>
