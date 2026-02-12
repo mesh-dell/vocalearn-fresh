@@ -475,14 +475,28 @@ export default function CourseDetailPage() {
                       {cat.questions.length}
                     </p>
                   </div>
-                  {cat.questions.length === 0 && (
-                    <Button
-                      size="sm"
-                      onClick={() => openCatGenModal(cat.catId)}
-                    >
-                      ✨ Generate Questions
-                    </Button>
-                  )}
+                  <div className="flex gap-2">
+                    {cat.questions.length === 0 ? (
+                      <Button
+                        size="sm"
+                        onClick={() => openCatGenModal(cat.catId)}
+                      >
+                        ✨ Generate Questions
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          router.push(
+                            `/dashboard/courses/${courseId}/cat/${cat.catId}/preview`
+                          )
+                        }
+                      >
+                        View Questions
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -554,16 +568,30 @@ export default function CourseDetailPage() {
                           Questions: {quiz.questions.length}
                         </p>
                       </div>
-                      {quiz.questions.length === 0 && (
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            openQuizGenModal(quiz.quizId, module.moduleId)
-                          }
-                        >
-                          ✨ Generate Questions
-                        </Button>
-                      )}
+                      <div className="flex gap-2">
+                        {quiz.questions.length === 0 ? (
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              openQuizGenModal(quiz.quizId, module.moduleId)
+                            }
+                          >
+                            ✨ Generate Questions
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/courses/${courseId}/quiz/${quiz.quizId}/preview?moduleId=${module.moduleId}`
+                              )
+                            }
+                          >
+                            View Questions
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
