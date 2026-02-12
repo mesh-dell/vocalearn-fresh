@@ -36,6 +36,7 @@ export function DashboardNav() {
             <NavLink href="/dashboard/notifications">Notifications</NavLink>
             <NavLink href="/dashboard/profile">Profile</NavLink>
             <NavLink href="/dashboard/certificates">Certificates</NavLink>
+            <NavLink href="/dashboard/leaderboard">Leaderboard</NavLink>
             <ThemeToggle />
 
             <Button variant="outline" onClick={logout}>
@@ -70,6 +71,9 @@ export function DashboardNav() {
               <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/dashboard/certificates">Certificates</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/leaderboard">Leaderboard</Link>
               </DropdownMenuItem>
               <DropdownMenuItem className="flex items-center">
                 <ThemeToggle />
