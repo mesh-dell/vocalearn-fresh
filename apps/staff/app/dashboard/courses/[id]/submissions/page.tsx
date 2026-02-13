@@ -27,12 +27,14 @@ import {
 } from "@repo/ui/select";
 
 import { Submission } from "@/Models/Submission";
-import { GradedSubmission, GradedAssignmentSubmission } from "@/Models/Grade";
+import { GradedSubmission, GradedAssignmentSubmission, } from "@/Models/Grade";
+import { UngradedAssignmentSubmission } from "@/Models/Submission";
 import {
   fetchCourseSubmissionsAPI,
   fetchAllStudentsAPI,
   gradeAssignmentSubmissionAPI,
 } from "@/Services/StaffService";
+import { fetchUngradedAssignmentSubmissionsAPI } from "@/Services/SubmissionService";
 import {
   fetchGradedSubmissionAPI,
   fetchGradedAssignmentSubmissionAPI,
@@ -78,6 +80,12 @@ export default function StaffCourseSubmissionsPage() {
   const [awardedMarks, setAwardedMarks] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isSubmittingGrade, setIsSubmittingGrade] = useState(false);
+
+  // Files dialog for ungraded assignments
+  const [ungradedFilesOpen, setUngradedFilesOpen] = useState(false);
+  const [ungradedFilesLoading, setUngradedFilesLoading] = useState(false);
+  const [selectedUngradedFiles, setSelectedUngradedFiles] =
+    useState<UngradedAssignmentSubmission | null>(null);
 
   // Fetch all students on mount
   useEffect(() => {
@@ -152,6 +160,36 @@ export default function StaffCourseSubmissionsPage() {
     }
   };
 
+  const handleViewUngradedFiles = async (submission: Submission) => {
+    try {
+      setUngradedFilesOpen(true);
+      setUngradedFilesLoading(true);
+      setSelectedUngradedFiles(null);
+
+      // Fetch all ungraded submissions for this assignment using targetId
+      const allSubmissions = await fetchUngradedAssignmentSubmissionsAPI(
+        submission.targetId,
+      );
+      
+      // Find the specific submission for this student
+      const studentSubmission = allSubmissions.find(
+        (sub) => sub.submissionId === Number(submission.submissionId)
+      );
+
+      if (studentSubmission) {
+        setSelectedUngradedFiles(studentSubmission);
+      } else {
+        toast.error("Submission not found");
+        setUngradedFilesOpen(false);
+      }
+    } catch {
+      toast.error("Failed to load submitted files");
+      setUngradedFilesOpen(false);
+    } finally {
+      setUngradedFilesLoading(false);
+    }
+  };
+
   const openGradeAssignmentDialog = (submission: Submission) => {
     setSelectedAssignmentSubmission(submission);
     setAwardedMarks("");
@@ -215,7 +253,10 @@ export default function StaffCourseSubmissionsPage() {
 
   const handleDownload = (fileUrl: string, fileName: string) => {
     const link = document.createElement("a");
-    link.href = `http://localhost:8080/${fileUrl}`;
+    // Check if fileUrl already contains the full URL, if not prepend the base URL
+    link.href = fileUrl.startsWith("http") 
+      ? fileUrl 
+      : `http://localhost:8080/${fileUrl}`;
     link.download = fileName;
     link.target = "_blank";
     document.body.appendChild(link);
@@ -338,14 +379,25 @@ export default function StaffCourseSubmissionsPage() {
 
                             {submission.submissionStatus === "UNGRADED" &&
                               submission.submissionType === "ASSIGNMENT" && (
-                                <Button
-                                  size="sm"
-                                  onClick={() =>
-                                    openGradeAssignmentDialog(submission)
-                                  }
-                                >
-                                  Grade
-                                </Button>
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                      handleViewUngradedFiles(submission)
+                                    }
+                                  >
+                                    Download
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      openGradeAssignmentDialog(submission)
+                                    }
+                                  >
+                                    Grade
+                                  </Button>
+                                </>
                               )}
                           </div>
                         </div>
@@ -561,6 +613,60 @@ export default function StaffCourseSubmissionsPage() {
                   selectedAssignmentGradeView.gradedAt,
                 ).toLocaleString()}
               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Ungraded Assignment Files Dialog */}
+      <Dialog open={ungradedFilesOpen} onOpenChange={setUngradedFilesOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Submitted Files</DialogTitle>
+            <DialogDescription>
+              Student: {selectedUngradedFiles?.studentAdmissionId}
+            </DialogDescription>
+          </DialogHeader>
+
+          {ungradedFilesLoading && (
+            <p className="text-muted-foreground">Loading files…</p>
+          )}
+
+          {selectedUngradedFiles && (
+            <div className="space-y-4">
+              {selectedUngradedFiles.files && selectedUngradedFiles.files.length > 0 ? (
+                <div className="space-y-2">
+                  {selectedUngradedFiles.files.map((file) => (
+                    <div
+                      key={file.fileId}
+                      className="flex items-center justify-between p-3 bg-muted rounded-md"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          📄 {file.fileName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {file.fileType}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="ml-3"
+                        onClick={() =>
+                          handleDownload(file.fileUrl, file.fileName)
+                        }
+                      >
+                        Download
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No files submitted
+                </p>
+              )}
             </div>
           )}
         </DialogContent>
